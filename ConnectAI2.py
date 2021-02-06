@@ -84,7 +84,7 @@ def evaluate_window(window, piece):
     elif window.count(piece) == 2 and window.count(EMPTY) == 2:
         score += 2
 
-    if window.count(opp_piece) == 3 and window.count(EMPTY)  == 1:
+    if window.count(opp_piece) == 3 and window.count(EMPTY) == 1:
         score -= 4
 
     return score
@@ -102,7 +102,6 @@ def score_position(board, piece):
         for c in range(COLUMN_COUNT-3):
             window = row_array[c:c+WINDOWLENGTH]
             score += evaluate_window(window, piece)
-
     # Score Vertical
     for c in range(COLUMN_COUNT):
         col_array = [int(i) for i in list(board[:,c])]
@@ -194,6 +193,35 @@ def pick_best_move(board,piece):
 
     return best_col
 
+class button():
+    def __init__(self, color, x, y, width, height, text=''):
+        self.color = color
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+
+    def draw(self, win, outline=None):
+        # Call this method to draw the button on the screen
+        if outline:
+            pygame.draw.rect(win, outline, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
+
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        if self.text != '':
+            font = pygame.font.SysFont('comicsans', 60)
+            text = font.render(self.text, 1, (0, 0, 0))
+            win.blit(text, (
+            self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
+
+    def isOver(self, pos):
+        # Pos is the mouse position or a tuple of (x,y) coordinates
+        if pos[0] > self.x and pos[0] < self.x + self.width:
+            if pos[1] > self.y and pos[1] < self.y + self.height:
+                return True
+
+        return False
 
 def draw_board(board):
     for c in range(COLUMN_COUNT):
@@ -208,6 +236,34 @@ def draw_board(board):
                 pygame.draw.circle(screen, YELLOW,(int(c * SQUARESIZE + SQUARESIZE / 2), height - int(r * SQUARESIZE + SQUARESIZE / 2)),RADIUS)
     pygame.display.update()
 
+def text_objects(msg):
+    font = pygame.font.Font(pygame.font.get_default_font(), 36)
+    textSurface = font.render(msg, True, YELLOW)
+    # pygame.display.update(textSurface)
+    return textSurface, textSurface.get_rect()
+
+
+def draw_main_screen(difficulty):
+    # pygame.draw.rect(screen, BLUE, (SQUARESIZE, SQUARESIZE, SQUARESIZE, SQUARESIZE))
+    startbutton.draw(screen,(0,0,0))
+    level1button.draw(screen,(0,0,0))
+    level2button.draw(screen, (0, 0, 0))
+    level3button.draw(screen, (0, 0, 0))
+    level4button.draw(screen, (0, 0, 0))
+    level5button.draw(screen, (0, 0, 0))
+    # label = mainfont.render("Select Difficulty Level", 1, YELLOW)
+    # screen.blit(label, (125, 350))
+    # color = (0, 255, 0)
+    msg = f'Select Difficulty Level:'
+    textSurf, textRect = text_objects(msg)
+    textRect.center = (width/2), STARTHEIGHT + 275
+    screen.blit(textSurf,textRect)
+    msg2 = f'Difficulty Level: {difficulty}'
+    textSurf, textRect = text_objects(msg2)
+    textRect.center = (width/2), STARTHEIGHT + 175
+    screen.blit(textSurf,textRect)
+    pygame.display.update()
+
 board = create_board()
 print_board(board)
 game_over = False
@@ -220,16 +276,87 @@ width = COLUMN_COUNT * SQUARESIZE
 height = (ROW_COUNT+1) * SQUARESIZE
 size = (width,height)
 RADIUS = int(SQUARESIZE/2 - 5)
-
+STARTHEIGHT = 100
 screen = pygame.display.set_mode(size)
-draw_board(board)
-pygame.display.update()
-
+startbutton = button((0, 255, 0), 225, STARTHEIGHT, 250, 100, 'Start Game')
+difficultyY = STARTHEIGHT + 325
+difficulty = 3
+level1button = button((0, 255, 0), 25, difficultyY, 100, 100, '1')
+level2button = button((0, 255, 0), (550/4+25), difficultyY, 100, 100, '2')
+level3button = button((0, 255, 0), (550/4*2+25), difficultyY, 100, 100, '3')
+level4button = button((0, 255, 0), (550/4*3+25), difficultyY, 100, 100, '4')
+level5button = button((0, 255, 0), 575, difficultyY, 100, 100, '5')
 myfont = pygame.font.SysFont("monospace", 75)
+mainfont = pygame.font.SysFont("monospace", 25)
+# Main Screen Loop
+home = True
 
 turn = random.randint(PLAYER,AI)
 
 while not game_over:
+
+    while home:
+        pygame.display.update()
+        draw_main_screen(difficulty)
+
+        for event in pygame.event.get():
+            pos = pygame.mouse.get_pos()
+
+            if event.type == pygame.QUIT:
+                sys.exit()
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if startbutton.isOver(pos):
+                home = False
+            if level1button.isOver(pos):
+                screen.fill((0,0,0))
+                difficulty = 1
+                draw_main_screen(difficulty)
+            if level2button.isOver(pos):
+                screen.fill((0, 0, 0))
+                difficulty = 2
+                draw_main_screen(difficulty)
+            if level3button.isOver(pos):
+                screen.fill((0, 0, 0))
+                difficulty = 3
+                draw_main_screen(difficulty)
+            if level4button.isOver(pos):
+                screen.fill((0, 0, 0))
+                difficulty = 4
+                draw_main_screen(difficulty)
+            if level5button.isOver(pos):
+                screen.fill((0, 0, 0))
+                difficulty = 5
+                draw_main_screen(difficulty)
+
+        if event.type == pygame.MOUSEMOTION:
+            if startbutton.isOver(pos):
+                startbutton.color = (255, 0, 0)
+            else:
+                startbutton.color = (0, 255, 0)
+            if level1button.isOver(pos):
+                level1button.color = (255, 0, 0)
+            else:
+                level1button.color = (0, 255, 0)
+            if level2button.isOver(pos):
+                level2button.color = (255, 0, 0)
+            else:
+                level2button.color = (0, 255, 0)
+            if level3button.isOver(pos):
+                level3button.color = (255, 0, 0)
+            else:
+                level3button.color = (0, 255, 0)
+            if level4button.isOver(pos):
+                level4button.color = (255, 0, 0)
+            else:
+                level4button.color = (0, 255, 0)
+            if level5button.isOver(pos):
+                level5button.color = (255, 0, 0)
+            else:
+                level5button.color = (0, 255, 0)
+
+    draw_board(board)
+    pygame.display.update()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -264,7 +391,7 @@ while not game_over:
                     turn += 1
                     turn = turn % 2
 
-                    print_board(board)
+                    # print_board(board)
                     draw_board(board)
 
 
@@ -273,7 +400,7 @@ while not game_over:
 
         # col = random.randint(0, COLUMN_COUNT-1)#
         # col = pick_best_move(board, AI_PIECE)
-        col,mimimax_score = minimax(board,5, -math.inf, math.inf, True)
+        col,mimimax_score = minimax(board,difficulty, -math.inf, math.inf, True)
 
         if is_valid_location(board, col):
             pygame.time.wait(500)
@@ -292,5 +419,19 @@ while not game_over:
             turn += 1
             turn = turn % 2
 
-    if game_over:
-            pygame.time.delay(2000)
+    while game_over:
+        msg = f'Press X to Exit'
+        font = pygame.font.Font(pygame.font.get_default_font(), 36)
+        textSurf = font.render(msg, True, (255,255,255))
+        textRect = textSurf.get_rect()
+        textSurf, textRect = text_objects(msg)
+        textRect.center = (width / 2), 95
+        screen.blit(textSurf, textRect)
+        pygame.display.update()
+
+        game_over = True
+        for event in pygame.event.get():
+            pos = pygame.mouse.get_pos()
+
+            if event.type == pygame.QUIT:
+                sys.exit()
